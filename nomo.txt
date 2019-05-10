@@ -1,0 +1,242 @@
+    var s = document.getElementById("s");
+    var p = document.getElementById("p");
+
+
+
+    s.onclick = function(){
+
+
+        let timer;
+        let chunks = [];
+        let finalChunks = [];
+        let count = 0;
+        let context = new AudioContext();
+
+
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+
+        navigator.getUserMedia({audio: true}, function(stream) {
+
+            var microphone = context.createMediaStreamSource(stream);
+            var processor = context.createScriptProcessor(1024,1,1);
+            microphone.connect(analyser);
+
+            analyser.fftSize = 1024;
+            var bufferLength = analyser.frequencyBinCount;
+            var dataArray = new Int16Array(analyser.fftSize);
+
+            update();
+
+            function update(){
+              console.log(dataArray);
+              analyser.getByteFrequencyData(dataArray);
+              timer = setTimeout(update,1000);
+              chunks.push(Array.from(dataArray));
+              count++;
+              microphone.close;
+              if(count===3){
+                  clearTimeout(timer);
+                  console.log((chunks));
+                  console.log((chunks[0][1]));
+                  stream.getTracks()[0].stop();
+                  let i;
+                  let j;
+                  for( i = 0;i<chunks.length;i++){
+                    for( j = 0;j<1024;j++){
+                        finalChunks.push(chunks[i][j]);
+                    }
+                  }
+                  console.log(finalChunks);
+                  /*$.post('save.php',{rawdata:chunks},function(data){
+                    console.log(data);
+                  });*/
+              }
+          }
+
+
+      }, function(err){console.log(err);});
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var s = document.getElementById("s");
+    var p = document.getElementById("p");
+
+
+
+    s.onclick = function(){
+        var player = new PCMPlayer({
+            encoding: '16bitInt',
+            channels: 2,
+            sampleRate: 8000,
+            flushingTime: 2000
+        });
+
+
+        let timer;
+        let chunks = [];
+        let finalChunks = [];
+        let count = 0;
+        let context = new AudioContext();
+
+
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+
+        navigator.getUserMedia({audio: true}, function(stream) {
+
+            var microphone = context.createMediaStreamSource(stream);
+            var analyser = context.createScriptProcessor(1024,1,1);
+            microphone.connect(analyser);
+
+            analyser.fftSize = 1024;
+            var bufferLength = analyser.frequencyBinCount;
+            var dataArray = new Uint8Array(analyser.fftSize);
+
+            update();
+
+            function update(){
+              console.log(dataArray);
+              //analyser.getByteFrequencyData(dataArray);
+              player.feed(dataArray);
+              timer = setTimeout(update,1000);
+              chunks.push(Array.from(dataArray));
+              count++;
+              microphone.close;
+              if(count===3){
+                  clearTimeout(timer);
+                  console.log((chunks));
+                  console.log((chunks[0][1]));
+                  stream.getTracks()[0].stop();
+                  let i;
+                  let j;
+                  for( i = 0;i<chunks.length;i++){
+                    for( j = 0;j<1024;j++){
+                        finalChunks.push(chunks[i][j]);
+                    }
+                }
+                console.log(finalChunks);
+                  /*$.post('save.php',{rawdata:chunks},function(data){
+                    console.log(data);
+                });*/
+            }
+        }
+
+
+    }, function(err){console.log(err);});
+    };
+
+
+
+
+
+
+
+
+
+ /*window.onload = function() {
+    var player = new PCMPlayer({
+        encoding: '16bitInt',
+        channels: 2,
+        sampleRate: 8000,
+        flushingTime: 2000
+    });
+
+    navigator.mediaDevices.getUserMedia({audio: true,video:false})
+    .then(function(stream){
+        let mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.start();
+        mediaRecorder.binaryType = 'ArrayBuffer';
+
+        mediaRecorder.addEventListener('dataavailable',function(event) {
+            var data = new Uint8Array(event.data);
+            //player.feed(data);
+            console.log(data);
+            console.log(1);
+        });
+    });
+    
+}   
+/*$('#start').click(function(){
+    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+    if(navigator.mediaDevices )
+    {
+       console.log('getUserMedia supported.');
+
+       const chunks = [];
+
+       navigator.mediaDevices.getUserMedia({audio: true,video:false})
+       .then(function(stream){
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.start();
+
+        mediaRecorder.addEventListener('dataavailable', function(event) {
+            chunks.push(event.data);
+            console.log(event.data);
+        });
+
+
+        setTimeout(function(){
+            mediaRecorder.stop();
+            console.log('record over');
+            console.log(typeof(chunks));
+        }, 3000);
+
+    })
+       .catch(function(err){
+         console.log('The following getUserMedia error occured: ' + err);
+     });
+   }
+   else{console.log('getUserMedia not supported on your browser!');}
+});*/
+
+
+/*let timer;
+        let chunks = [];
+        let finalChunks = [];
+        let count = 0;
+        let context = new AudioContext();
+        let source;
+
+
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+
+
+        var handleSuccess = function(stream) {
+            var microphone = context.createMediaStreamSource(stream);
+            var processor = context.createScriptProcessor(1024,1,1);
+            console.log(processor.bufferSize);
+            microphone.connect(processor);
+
+            processor.onaudioprocess = function(e){
+                var output = e.outputBuffer.getChannelData(0);
+                for (var i = 0; i < output.length; i++) {
+                    output[i] = Math.random();
+                    console.log(output[i]);
+                }
+            }
+        }
+
+
+
+        navigator.mediaDevices.getUserMedia({audio: true})
+        .then(handleSuccess)*/
+
